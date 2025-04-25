@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 model_deepseek_info = {
         "name": "deepseek-chat",  # 模型名称，可随意填写
@@ -22,7 +23,7 @@ model_deepseek_info = {
 # model_deepseek_client = OpenAIChatCompletionClient(
 #     model="deepseek-chat",
 #     base_url="https://api.deepseek.com",
-#     api_key="sk-79f54a8dcf024fb8bcf3d13ada930a7e",
+#     api_key="sk-b626b8caaf8a49499113eeff07f926af",
 #     model_info=model_deepseek_info,
 # )
 
@@ -47,6 +48,6 @@ model_qwen_info = {
 # model_qwen_client = OpenAIChatCompletionClient(
 #     model="qwen-max",
 #     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-#     api_key="sk-73f2726c462b4933bc85a5649d2d081f",
+#     api_key="sk-690990f256574d83b120522fe3a8e199",
 #     model_info=model_qwen_info,
 # )

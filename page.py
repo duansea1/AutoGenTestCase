@@ -80,6 +80,32 @@ def read_system_message(filename):
         return data
 
 
+def update_config(conf, section, choice, api_key, base_url, model, tokens, temperature, top, base_url_list, model_list):
+    if choice:
+        conf[section] = {
+            'choice': choice,
+            'api_key': api_key,
+            'base_url': base_url,
+            'model': model,
+            'tokens': tokens,
+            'temperature': temperature,
+            'top': top,
+            'base_url_list': ",".join(base_url_list),
+            'model_list': ",".join(model_list)
+        }
+    else:
+        conf[section] = {
+            'choice': choice,
+            'api_key': conf[section]['api_key'],
+            'base_url': conf[section]['base_url'],
+            'model': conf[section]['model'],
+            'tokens': conf[section]['tokens'],
+            'temperature': conf[section]['temperature'],
+            'top': conf[section]['top'],
+            'base_url_list': conf[section]['base_url_list'],
+            'model_list': conf[section]['model_list']
+        }
+
 # 创建测试用例生成器代理
 @st.cache_resource
 def get_testcase_writer(_mode_client, system_message):
@@ -116,6 +142,8 @@ def html_init():
         $("footer", window.parent.document).remove()
     });
     '''
+    # 添加Excel功能开关
+    st.sidebar.checkbox('启用Excel导出功能', value=True, key='enable_excel')
     # 引用了JQuery v2.2.4
     components.html(f'''<script src="https://cdn.bootcdn.net/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
         <script>{js_code}</script>''', width=0, height=0)
@@ -160,7 +188,7 @@ def html_init():
                         unsafe_allow_html=True)
 
     # 读取配置
-    conf.read(config_path)
+    conf.read(config_path, encoding='utf-8')
     deep_base_url_list = conf['deepseek']['base_url_list'].split(",")
     qwen_base_url_list = conf['qwen']['base_url_list'].split(",")
     deep_model_list = conf['deepseek']['model_list'].split(",")
@@ -174,7 +202,7 @@ def html_init():
         cols1 = st.columns([2, 2, 2])
         if ai1:
             api_key_1 = cols1[0].text_input("deepseek_api_key",
-                                            placeholder="sk-xxxxxxxxxxxxx",
+                                            placeholder="sk-b626b8caaf8a49499113eeff07f926af",
                                             value=conf['deepseek']['api_key'])
             base_url_1 = cols1[1].selectbox("base_url", deep_base_url_list[:-1],
                                             index=deep_base_url_list.index(conf['deepseek']['base_url']))
@@ -201,7 +229,7 @@ def html_init():
         cols2 = st.columns([2, 2, 2])
         if ai2:
             api_key_2 = cols2[0].text_input("qwen_api_key",
-                                            placeholder="sk-xxxxxxxxxxxxx",
+                                            placeholder="sk-690990f256574d83b120522fe3a8e199",
                                             value=conf['qwen']['api_key'])
             base_url_2 = cols2[1].selectbox("base_url", qwen_base_url_list[:-1],
                                             index=qwen_base_url_list.index(conf['qwen']['base_url']))
@@ -223,56 +251,15 @@ def html_init():
                                             value=int(conf['qwen']['top']),
                                             help="模型随机性参数，接近 1 时：模型几乎会考虑所有可能的词，只有概率极低的词才会被排除，随机性也越强；")
 
+        def save_config(section, ai, api_key, base_url, model, max_tokens, temperature, top_p, base_url_list, model_list):
+            update_config(conf, section, ai, api_key, base_url, model, max_tokens, temperature, top_p, base_url_list, model_list)
+
         if st.button('保存配置'):
             try:
-                if ai1:
-                    conf['deepseek'] = {
-                        'choice': ai1,
-                        'api_key': api_key_1,
-                        'base_url': base_url_1,
-                        'model': model_1,
-                        'tokens': max_tokens_1,
-                        'temperature': temperature_1,
-                        'top': top_p_1,
-                        'base_url_list': ",".join(deep_base_url_list),
-                        'model_list': ",".join(deep_model_list)
-                    }
-                else:
-                    conf['deepseek'] = {
-                        'choice': ai1,
-                        'api_key': conf['deepseek']['api_key'],
-                        'base_url': conf['deepseek']['base_url'],
-                        'model': conf['deepseek']['model'],
-                        'tokens': conf['deepseek']['tokens'],
-                        'temperature': conf['deepseek']['temperature'],
-                        'top': conf['deepseek']['top'],
-                        'base_url_list': conf['deepseek']['base_url_list'],
-                        'model_list': conf['deepseek']['model_list']
-                    }
+                save_config('deepseek', ai1, api_key_1, base_url_1, model_1, max_tokens_1, temperature_1, top_p_1, deep_base_url_list, deep_model_list)
+                # 若未保存千问的配置，则不走用例评审流程
                 if ai2:
-                    conf['qwen'] = {
-                        'choice': ai2,
-                        'api_key': api_key_2,
-                        'base_url': base_url_2,
-                        'model': model_2,
-                        'tokens': max_tokens_2,
-                        'temperature': temperature_2,
-                        'top': top_p_2,
-                        'base_url_list': ",".join(qwen_base_url_list),
-                        'model_list': ",".join(qwen_model_list)
-                    }
-                else:
-                    conf['qwen'] = {
-                        'choice': ai2,
-                        'api_key': conf['qwen']['api_key'],
-                        'base_url': conf['qwen']['base_url'],
-                        'model': conf['qwen']['model'],
-                        'tokens': conf['qwen']['tokens'],
-                        'temperature': conf['qwen']['temperature'],
-                        'top': conf['qwen']['top'],
-                        'base_url_list': conf['qwen']['base_url_list'],
-                        'model_list': conf['qwen']['model_list']
-                    }
+                    save_config('qwen', ai2, api_key_2, base_url_2, model_2, max_tokens_2, temperature_2, top_p_2, qwen_base_url_list, qwen_model_list)
 
                 with open(config_path, 'w', encoding='utf-8') as f:
                     conf.write(f)
@@ -293,9 +280,9 @@ def html_init():
             show_slider = st.checkbox('用例分类占比(%)', True)
             cols4 = st.columns([2, 2])
             if show_slider:
-                functional_testing = cols4[0].slider("功能用例", min_value=0, max_value=100, value=55)
-                boundary_testing = cols4[0].slider("边界用例", min_value=0, max_value=100, value=25)
-                exception_testing = cols4[0].slider("异常用例", min_value=0, max_value=100, value=20)
+                functional_testing = cols4[0].slider("功能用例", min_value=0, max_value=100, value=5)
+                boundary_testing = cols4[0].slider("边界用例", min_value=0, max_value=100, value=5)
+                exception_testing = cols4[0].slider("异常用例", min_value=0, max_value=100, value=10)
                 perfmon_testing = cols4[1].slider("性能/兼容性用例", min_value=0, max_value=100, value=0)
                 regression_testing = cols4[1].slider("回归测试用例", min_value=0, max_value=100, value=0)
                 cases_rate_list = [functional_testing,
@@ -355,8 +342,33 @@ def html_init():
         if submit_button:
             if bool(st.session_state.run_cases):
                 st.session_state.update({"run_cases": False})
+                full_response = ""
                 # 处理提交
                 if user_input:
+                    # 创建Excel文件
+                    output = BytesIO()
+                    workbook = xlsxwriter.Workbook(output)
+                    worksheet = workbook.add_worksheet('测试用例')
+                    # 写入表头
+                    worksheet.write(0, 0, '用例编号')
+                    worksheet.write(0, 1, '用例描述')
+                    worksheet.write(0, 2, '预期结果')
+                    worksheet.write(0, 3, '实际结果')
+                    worksheet.write(0, 4, '状态')
+                    # 写入测试用例
+                    row = 1
+                    for case in format_testcases(full_response):
+                        worksheet.write(row, 0, row)
+                        worksheet.write(row, 1, case)
+                        row += 1
+                    workbook.close()
+                    # 添加下载按钮
+                    st.download_button(
+                        label='下载测试用例',
+                        data=output.getvalue(),
+                        file_name='testcases.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
                     # 准备任务描述
                     if test_priority != "--" and test_case_count != 0:
                         task = f""" 
@@ -488,13 +500,26 @@ def html_init():
                                 icon=":material/markdown:",
                             )
 
-                            st.download_button(
-                                label="下载测试用例(.xlsx)",
-                                data=output.getvalue(),
-                                file_name="测试用例.xlsx",
-                                mime="application/vnd.ms-excel",
-                                icon=":material/download:",
-                            )
+                            if st.session_state.get('enable_excel', True):
+                                import generate_excel
+                                excel_data = generate_excel.generate_testcase_excel(case_list_new, "测试用例.xlsx")
+                                st.download_button(
+                                    label="下载测试用例(.xlsx)",
+                                    data=excel_data,
+                                    file_name="测试用例.xlsx",
+                                    mime="application/vnd.ms-excel",
+                                    icon=":material/download:",
+                                )
+
+                            # import generate_excel
+                            # excel_data = generate_excel.generate_testcase_excel(case_list_new, "测试用例.xlsx")
+                            # st.download_button(
+                            #     label="下载测试用例(.xlsx)",
+                            #     data=excel_data,
+                            #     file_name="测试用例.xlsx",
+                            #     mime="application/vnd.ms-excel",
+                            #     icon=":material/download:",
+                            # )
 
                     if eval(conf['deepseek']['choice']) and eval(conf['qwen']['choice']):
                         if conf['deepseek']['api_key'] != "" and conf['qwen']['api_key'] != "":

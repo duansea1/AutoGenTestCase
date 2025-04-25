@@ -1,6 +1,44 @@
 # AutoGenTestCase
 借助AI大模型帮助生成测试用例
 
+## 项目目录结构
+```
+AutoGenTestCase/
+├── .new_env/
+├── __pycache__/
+├── hooks/
+│   └── __pycache__/
+├── img/
+├── README.md
+├── TESTCASE_READER_SYSTEM_MESSAGE.txt
+├── TESTCASE_WRITER_SYSTEM_MESSAGE.txt
+├── config.ini
+├── llms.py
+├── page.py
+├── requirements.txt
+├── run.py
+└── run.spec
+```
+
+## 启动步骤
+1. 安装依赖：
+   ```bash
+   uv pip install -r requirements.txt
+   ```
+2. 配置API Key：
+   - 按照下方说明申请DeepSeek和通义千问的API Key
+   - 将API Key填写到config.ini文件中
+3. 运行程序：
+   ```bash
+    streamlit run page.py
+   ```
+
+## 注意事项
+1. 请确保Python版本为3.8或以上
+2. 首次使用需要申请API Key并填写到配置文件中
+3. 使用前请仔细阅读模型收费标准，避免产生意外费用
+4. 建议在虚拟环境中运行本项目
+
 ### 打包程序下载地址
 https://pan.baidu.com/s/1Cftl4BiWh_reU-oCwW3aMg  提取码：6bwu
 
